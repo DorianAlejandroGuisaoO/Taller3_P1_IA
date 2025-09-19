@@ -8,6 +8,46 @@ import matplotlib
 import io
 import urllib, base64
 
+import numpy as np
+
+from sentence_transformers import SentenceTransformer
+
+
+# Cargar modelo una sola vez
+model = SentenceTransformer("all-MiniLM-L6-v2")
+
+def recommend_movie(request):
+    recommendation = None
+    if request.method == "POST":
+        prompt = request.POST.get("prompt")
+
+        if prompt:
+            # Embedding del prompt
+            query_emb = model.encode(prompt, convert_to_numpy=True).astype(np.float32)
+
+            best_score = -1
+            best_movie = None
+
+            # Comparar con cada película
+            for movie in Movie.objects.all():
+                movie_emb = np.frombuffer(movie.emb, dtype=np.float32)
+                sim = np.dot(query_emb, movie_emb) / (
+                    np.linalg.norm(query_emb) * np.linalg.norm(movie_emb)
+                )
+
+                if sim > best_score:
+                    best_score = sim
+                    best_movie = movie
+
+            recommendation = {
+                "title": best_movie.title,
+                "description": best_movie.description,
+                "score": round(float(best_score), 3),
+                "image": best_movie.image.url if best_movie.image else None,
+            }
+
+    return render(request, "recommend.html", {"recommendation": recommendation})
+
 def home(request):
     #return HttpResponse('<h1>Welcome to Home Page</h1>')
     #return render(request, 'home.html')

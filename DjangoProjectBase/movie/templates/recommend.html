@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1 class="mt-4 mb-3">🎬 Movie Recommendation</h1>
+
+    <form method="post" class="mb-4">
+        {% csrf_token %}
+        <div class="input-group">
+            <input type="text" name="prompt" class="form-control" placeholder="Describe lo que quieres ver...">
+            <button type="submit" class="btn btn-primary">Buscar</button>
+        </div>
+    </form>
+
+    {% if recommendation %}
+        <div class="card" style="width: 22rem;">
+            {% if recommendation.image %}
+                <img src="{{ recommendation.image }}" class="card-img-top" alt="Poster">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ recommendation.title }}</h5>
+                <p class="card-text">{{ recommendation.description }}</p>
+                <span class="badge bg-success">Similitud: {{ recommendation.score }}</span>
+            </div>
+        </div>
+    {% endif %}
+{% endblock content %}
